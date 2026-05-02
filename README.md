@@ -29,12 +29,29 @@ Civic Navigator is a smart, context-aware assistant designed to eliminate inform
    ```bash
    npm run dev
    ```
-4. **Seed Mock Data:**
+4. **Run Automated Tests:**
+   ```bash
+   npm test
+   ```
+   Use `npm run test:watch` while developing if you want Vitest to rerun on file changes.
+5. **Build Verification:**
+   ```bash
+   npm run build
+   ```
+   This confirms the production bundle still compiles cleanly after changes.
+6. **Seed Mock Data:**
    Click the **"Seed Mock Data"** button in the app header. This will populate your Firestore with sample booths (Dallas, West Bengal, Tamil Nadu, UK) to simulate real-world incidents.
-5. **Interactive Testing:**
+7. **Interactive Testing:**
    - Change your **Language** in the dropdown and select a booth to see Gemini's localized advice.
    - Click **"Report Issue"** on a booth to test the incident reporting flow.
    - Observe the **Map** markers updating based on the seeded data.
+
+## 🧪 Test Coverage
+The current Vitest suite covers the most important user-facing flows:
+- `Dashboard` rendering and station selection flow.
+- `BoothCard` interactions, including report-issue behavior.
+- Demo-mode seeding in `seedDatabase`.
+- The fallback model list helper in `checkAvailableModels`.
 
 ## 🧠 Logic & Decision Making
 The assistant uses a "Situational Context Wrapper" to feed Gemini data including:
