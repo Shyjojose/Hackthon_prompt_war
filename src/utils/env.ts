@@ -58,7 +58,7 @@ export const validateFirebaseConfig = (): void => {
     required.forEach(key => {
       try {
         getRequiredEnv(key);
-      } catch (e) {
+      } catch {
         missing.push(key);
       }
     });
@@ -87,7 +87,7 @@ export const validateAPIConfig = (): void => {
   apis.forEach(key => {
     try {
       getOptionalEnv(key);
-    } catch (e) {
+    } catch {
       missing.push(key);
     }
   });

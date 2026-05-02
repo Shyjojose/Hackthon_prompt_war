@@ -52,19 +52,47 @@ The current Vitest suite covers the most important user-facing flows:
 - **BoothCard Interactions:** Card rendering, click behavior, and incident report modal opening.
 - **Demo-mode Seeding:** Local storage population with sample polling stations (Dallas, India regions, UK).
 - **Model Availability:** Fallback model list verification in `checkAvailableModels` utility.
+- **Incident Form:** Modal rendering, validation behavior, character counter, and close interactions.
+- **Error Boundary:** Error capture and fallback rendering.
+- **Logger Service:** Error/warn/info/debug logging and log retention behavior.
+- **Constants Integrity:** Static config correctness and expected key presence.
 
 **Test Execution:**
 ```bash
 npm test                # Run all tests once
 npm run test:watch     # Watch mode (rerun on file changes)
 ```
-✅ **Status:** All 5 tests passing | Build: Zero TypeScript errors | Bundle size: ~584 KB (gzipped: ~180 KB)
+✅ **Status:** 29/29 tests passing across 8 test files
+
+## 🏗️ Production Build Information
+
+**Latest Build Command:**
+```bash
+npm run build
+```
+
+**Latest Build Result:**
+- TypeScript: Passed (`tsc -b`)
+- Vite: Passed
+- Modules transformed: 47
+- Bundle output: `dist/assets/index-gVz5AKAD.js` = **586.26 kB**
+- Gzip size: **180.78 kB**
+- Build time: ~198 ms
+
+**Notes:**
+- Build is production-ready and error-free.
+- Vite reports a chunk-size warning (>500 kB), which is expected until Phase 2 code-splitting is implemented.
+
+**Quality Gates (Current):**
+- `npm run lint`: ✅ pass
+- `npm test`: ✅ 29/29 pass
+- `npm audit`: ✅ 0 vulnerabilities
 
 ## 🔒 Security & Quality Improvements
 Recent enhancements to strengthen reliability and security:
 
 ### Security Hardening
-- **Security Headers (firebase.json):** Added X-Content-Type-Options, X-Frame-Options, and X-XSS-Protection headers to prevent MIME sniffing, clickjacking, and XSS attacks.
+- **Security Headers (firebase.json):** Added and validated X-Content-Type-Options, X-Frame-Options, X-XSS-Protection, Strict-Transport-Security, Referrer-Policy, Permissions-Policy, and Content-Security-Policy.
 - **Input Validation:** 500-character limit on incident descriptions with client-side trimming and validation.
 - **DOM Safety:** Replaced innerHTML with safe DOM API methods in BoothMap to prevent XSS injection.
 - **Environment Variables:** No hardcoded secrets in source code; fails gracefully in demo mode if API keys are missing.
@@ -80,9 +108,10 @@ Recent enhancements to strengthen reliability and security:
 - **User Control:** "Skip" button allows users to proceed without sharing location while still accessing booth information.
 
 ### Code Quality
-- **Type Safety:** Replaced `any` types with specific TypeScript interfaces. Firebase Timestamp properly typed as `number | { seconds: number; nanoseconds: number }`.
+- **Type Safety:** Replaced `any` types with specific TypeScript interfaces and enabled strict TypeScript compiler settings in `tsconfig.app.json`.
 - **Accessibility:** Added ARIA labels and descriptive text for character counters and form controls.
-- **Test Compatibility:** All 5 tests updated with proper mock data structures. Build verification confirms zero regressions.
+- **Linting:** ESLint now passes with zero errors.
+- **Test Compatibility:** Expanded test suite now passes with 29 tests and confirms no regressions.
 
 ## 🧠 Logic & Decision Making
 The assistant uses a "Situational Context Wrapper" to feed Gemini data including:

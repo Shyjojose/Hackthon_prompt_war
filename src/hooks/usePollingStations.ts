@@ -35,14 +35,17 @@ export const usePollingStations = () => {
           setStations(stationsData);
           setLoading(false);
         },
-        (err) => {
+        (err: Error) => {
           setError(err.message);
           setLoading(false);
         }
       );
       return () => unsubscribe();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+    if (err instanceof Error) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+    setError(err.message);
+    }
       setLoading(false);
     }
   }, []);

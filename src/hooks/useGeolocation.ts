@@ -5,17 +5,14 @@ import { logger } from '../services/logger';
 export const useGeolocation = () => {
   const [location, setLocation] = useState<Location | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [consentGiven, setConsentGiven] = useState(false);
-  const [showConsentPrompt, setShowConsentPrompt] = useState(true);
-
-  // Check if user has already consented to geolocation
-  useEffect(() => {
+  const [consentGiven, setConsentGiven] = useState(() => {
     const savedConsent = localStorage.getItem('geolocation_consent');
-    if (savedConsent === 'true') {
-      setConsentGiven(true);
-      setShowConsentPrompt(false);
-    }
-  }, []);
+    return savedConsent === 'true';
+  });
+  const [showConsentPrompt, setShowConsentPrompt] = useState(() => {
+    const savedConsent = localStorage.getItem('geolocation_consent');
+    return savedConsent !== 'true';
+  });
 
   // Request geolocation permission after user consent
   useEffect(() => {
@@ -23,8 +20,9 @@ export const useGeolocation = () => {
 
     if (!navigator.geolocation) {
       const msg = 'Geolocation is not supported by your browser';
-      setError(msg);
       logger.warn(msg);
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+      setError(msg);
       return;
     }
 

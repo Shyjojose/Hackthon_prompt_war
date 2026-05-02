@@ -17,10 +17,11 @@ export const seedDatabase = async () => {
   await batch.commit();
 
   for (const station of MOCK_STATIONS_DATA) {
-    const { id, ...data } = station; // Don't send local ID to Firebase
-    await addDoc(collection(db, 'polling_stations'), {
-      ...data,
-      lastUpdated: new Date()
-    });
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { id, ...data } = station; // Exclude local ID from Firebase upload
+        await addDoc(collection(db, 'polling_stations'), {
+          ...data,
+          lastUpdated: new Date()
+        });
   }
 };

@@ -51,7 +51,7 @@ export const Dashboard: React.FC = () => {
       
       const smartAdvice = await getSmartAdvice(context, language);
       setAdvice(smartAdvice);
-    } catch (error) {
+    } catch {
       setAdvice(UI_MESSAGES.ADVICE_UNAVAILABLE);
     } finally {
       setAdviceLoading(false);
