@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { reportIncident } from '../services/incidents';
 import { logger } from '../services/logger';
+import { UI_MESSAGES, INCIDENT_REPORTING } from '../utils/constants';
 
 interface IncidentFormProps {
   boothId: string;
@@ -13,8 +14,12 @@ export const IncidentForm: React.FC<IncidentFormProps> = ({ boothId, boothName, 
   const [description, setDescription] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+  const descriptionInputRef = useRef<HTMLTextAreaElement>(null);
 
-  const MAX_DESCRIPTION_LENGTH = 500;
+  // Focus on description input when modal opens for better accessibility
+  useEffect(() => {
+    descriptionInputRef.current?.focus();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,13 +27,13 @@ export const IncidentForm: React.FC<IncidentFormProps> = ({ boothId, boothName, 
     
     if (!trimmedDescription) {
       logger.warn("Incident form submitted with empty description");
-      alert("Please provide a description for the incident.");
+      alert(UI_MESSAGES.INCIDENT_REQUIRED);
       return;
     }
     
-    if (trimmedDescription.length > MAX_DESCRIPTION_LENGTH) {
-      logger.warn(`Incident description too long: ${trimmedDescription.length} chars (max ${MAX_DESCRIPTION_LENGTH})`);
-      alert(`Description must be ${MAX_DESCRIPTION_LENGTH} characters or less. Current: ${trimmedDescription.length}.`);
+    if (trimmedDescription.length > INCIDENT_REPORTING.MAX_DESCRIPTION_LENGTH) {
+      logger.warn(`Incident description too long: ${trimmedDescription.length} chars (max ${INCIDENT_REPORTING.MAX_DESCRIPTION_LENGTH})`);
+      alert(`Description must be ${INCIDENT_REPORTING.MAX_DESCRIPTION_LENGTH} characters or less. Current: ${trimmedDescription.length}.`);
       return;
     }
     
@@ -65,12 +70,12 @@ export const IncidentForm: React.FC<IncidentFormProps> = ({ boothId, boothName, 
         borderRadius: '12px',
         width: '90%',
         maxWidth: '500px'
-      }} role="dialog" aria-labelledby="incident-title">
-        <h2 id="incident-title" style={{ marginTop: 0 }}>Report Incident at {boothName}</h2>
+      }} role="dialog" aria-labelledby="incident-title" aria-modal="true">
+        <h2 id="incident-title" style={{ marginTop: 0 }}>{UI_MESSAGES.INCIDENT_FORM_TITLE} at {boothName}</h2>
         
         {success ? (
           <div style={{ color: '#10b981', textAlign: 'center', padding: '1rem' }}>
-            Report submitted successfully. Thank you for helping keep the process transparent.
+            {UI_MESSAGES.INCIDENT_FORM_SUCCESS}
           </div>
         ) : (
           <form onSubmit={handleSubmit}>
@@ -90,19 +95,20 @@ export const IncidentForm: React.FC<IncidentFormProps> = ({ boothId, boothName, 
             </div>
 
             <div style={{ marginBottom: '1.5rem' }}>
-              <label htmlFor="desc" style={{ display: 'block', marginBottom: '0.5rem' }}>Description (Max 500 characters)</label>
+              <label htmlFor="desc" style={{ display: 'block', marginBottom: '0.5rem' }}>{UI_MESSAGES.INCIDENT_FORM_DESCRIPTION_LABEL}</label>
               <textarea 
                 id="desc"
+                ref={descriptionInputRef}
                 required
                 value={description}
-                onChange={(e) => setDescription(e.target.value.slice(0, MAX_DESCRIPTION_LENGTH))}
-                maxLength={MAX_DESCRIPTION_LENGTH}
+                onChange={(e) => setDescription(e.target.value.slice(0, INCIDENT_REPORTING.MAX_DESCRIPTION_LENGTH))}
+                maxLength={INCIDENT_REPORTING.MAX_DESCRIPTION_LENGTH}
                 style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #d1d5db', minHeight: '100px' }}
                 placeholder="Please provide details about the situation..."
                 aria-describedby="desc-counter"
               />
               <div id="desc-counter" style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem' }}>
-                {description.length}/{MAX_DESCRIPTION_LENGTH}
+                {description.length}/{INCIDENT_REPORTING.MAX_DESCRIPTION_LENGTH} {UI_MESSAGES.INCIDENT_FORM_DESCRIPTION_HINT}
               </div>
             </div>
 
@@ -112,7 +118,7 @@ export const IncidentForm: React.FC<IncidentFormProps> = ({ boothId, boothName, 
                 onClick={onClose}
                 style={{ padding: '0.5rem 1rem', border: 'none', background: 'none', cursor: 'pointer', color: '#6b7280' }}
               >
-                Cancel
+                {UI_MESSAGES.CANCEL}
               </button>
               <button 
                 type="submit" 
@@ -126,7 +132,7 @@ export const IncidentForm: React.FC<IncidentFormProps> = ({ boothId, boothName, 
                   cursor: submitting ? 'not-allowed' : 'pointer' 
                 }}
               >
-                {submitting ? 'Submitting...' : 'Submit Report'}
+                {submitting ? UI_MESSAGES.INCIDENT_FORM_STATION_LABEL : UI_MESSAGES.SUBMIT}
               </button>
             </div>
           </form>

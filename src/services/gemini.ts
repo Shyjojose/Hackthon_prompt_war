@@ -42,16 +42,6 @@ Advice:`;
     return response.text();
   } catch (error: any) {
     console.error("Gemini API Error Details:", error);
-    
-    // Fallback if the requested model fails
-    try {
-        const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-        const result = await model.generateContent(context);
-        const response = await result.response;
-        return response.text();
-    } catch (innerError: any) {
-        return `AI Error: ${innerError.message || "Model failed. Please verify the model name and your API Key access."}`;
-    }
+    return `AI Error: ${error.message || "Gemini 2.5 Flash model failed. Please verify your API Key access and model availability."}`;
   }
 };

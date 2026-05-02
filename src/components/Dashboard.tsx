@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { usePollingStations } from '../hooks/usePollingStations';
 import { useGeolocation } from '../hooks/useGeolocation';
 import { BoothCard } from './BoothCard';
@@ -7,8 +7,7 @@ import type { PollingStation } from '../types';
 import { getSmartAdvice } from '../services/gemini';
 import { seedDatabase } from '../utils/seedData';
 import { logger } from '../services/logger';
-
-const LANGUAGES = ['English', 'Spanish', 'Hindi', 'Tamil', 'French'];
+import { SUPPORTED_LANGUAGES, ASSIGNED_PRECINCT_NAME, UI_MESSAGES } from '../utils/constants';
 
 export const Dashboard: React.FC = () => {
   const { stations, loading, error: stationsError } = usePollingStations();
@@ -19,10 +18,7 @@ export const Dashboard: React.FC = () => {
   const [language, setLanguage] = useState('English');
   const [seeding, setSeeding] = useState(false);
 
-  // Mock assigned precinct for demonstration
-  const ASSIGNED_PRECINCT_NAME = "Dallas Central Library (Precinct 104)";
-
-  const handleSeed = async () => {
+  const handleSeed = useCallback(async () => {
     if (window.confirm("Seed database with mock stations? This will clear existing data.")) {
       setSeeding(true);
       try {
@@ -35,9 +31,9 @@ export const Dashboard: React.FC = () => {
         setSeeding(false);
       }
     }
-  };
+  }, []);
 
-  const handleStationSelect = async (station: PollingStation) => {
+  const handleStationSelect = useCallback(async (station: PollingStation) => {
     setSelectedStation(station);
     setAdviceLoading(true);
     try {
@@ -56,17 +52,17 @@ export const Dashboard: React.FC = () => {
       const smartAdvice = await getSmartAdvice(context, language);
       setAdvice(smartAdvice);
     } catch (error) {
-      setAdvice('Unable to get advice. Please verify your precinct on the official board.');
+      setAdvice(UI_MESSAGES.ADVICE_UNAVAILABLE);
     } finally {
       setAdviceLoading(false);
     }
-  };
+  }, [userLocation, language]);
 
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem' }}>
       <header style={{ marginBottom: '2rem', textAlign: 'center' }}>
-        <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem', color: '#111827' }}>Civic Navigator</h1>
-        <p style={{ color: '#6b7280' }}>Real-time Booth Status & Smart Voter Assistance</p>
+        <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem', color: '#111827' }}>{UI_MESSAGES.DASHBOARD_TITLE}</h1>
+        <p style={{ color: '#6b7280' }}>{UI_MESSAGES.DASHBOARD_SUBTITLE}</p>
         
         <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '1rem' }}>
           <select 
@@ -75,7 +71,7 @@ export const Dashboard: React.FC = () => {
             style={{ padding: '0.5rem', borderRadius: '6px', border: '1px solid #d1d5db' }}
             aria-label="Select Language"
           >
-            {LANGUAGES.map(lang => <option key={lang} value={lang}>{lang}</option>)}
+            {SUPPORTED_LANGUAGES.map(lang => <option key={lang} value={lang}>{lang}</option>)}
           </select>
           <button 
             onClick={handleSeed}
@@ -90,35 +86,35 @@ export const Dashboard: React.FC = () => {
               fontSize: '0.875rem'
             }}
           >
-            {seeding ? 'Seeding...' : 'Seed Mock Data'}
+            {seeding ? UI_MESSAGES.SEEDING : UI_MESSAGES.SEED_MOCK_DATA}
           </button>
         </div>
       </header>
 
       {stationsError && (
         <div style={{ backgroundColor: '#fff7ed', color: '#9a3412', padding: '1rem', borderRadius: '8px', marginBottom: '1rem', border: '1px solid #fdba74' }}>
-          <strong>Database Syncing Issue:</strong> {stationsError}. <br/>
-          <em>Tip: Click "Seed Mock Data" or check your .env configuration.</em>
+          <strong>{UI_MESSAGES.DATABASE_SYNC_ERROR}:</strong> {stationsError}. <br/>
+          <em>{UI_MESSAGES.DATABASE_SYNC_TIP}</em>
         </div>
       )}
 
       {geoError && (
         <div style={{ backgroundColor: '#fee2e2', color: '#991b1b', padding: '1rem', borderRadius: '8px', marginBottom: '2rem' }} role="alert">
-          <strong>Location Error:</strong> {geoError}. We recommend enabling location for precinct verification.
+          <strong>{UI_MESSAGES.LOCATION_ERROR}:</strong> {geoError}. {UI_MESSAGES.LOCATION_RECOMMENDATION}
         </div>
       )}
 
       {showConsentPrompt && (
         <div style={{ backgroundColor: '#dbeafe', color: '#0c4a6e', padding: '1rem', borderRadius: '8px', marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }} role="alert">
           <div>
-            <strong>Location Services:</strong> Enable location to verify your precinct assignment and get better polling station recommendations.
+            <strong>{UI_MESSAGES.LOCATION_CONSENT_TITLE}:</strong> {UI_MESSAGES.LOCATION_CONSENT_MESSAGE}
           </div>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             <button onClick={onConsentGive} style={{ padding: '0.5rem 1rem', backgroundColor: '#0369a1', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.875rem' }}>
-              Enable
+              {UI_MESSAGES.ENABLE_LOCATION}
             </button>
             <button onClick={onConsentDeny} style={{ padding: '0.5rem 1rem', backgroundColor: 'transparent', color: '#0c4a6e', border: '1px solid #0c4a6e', borderRadius: '4px', cursor: 'pointer', fontSize: '0.875rem' }}>
-              Skip
+              {UI_MESSAGES.SKIP_LOCATION}
             </button>
           </div>
         </div>
@@ -128,18 +124,18 @@ export const Dashboard: React.FC = () => {
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', gridAutoFlow: 'row' }}>
         <section aria-labelledby="stations-title">
-          <h2 id="stations-title" style={{ fontSize: '1.5rem', marginBottom: '1rem', color: '#374151' }}>Polling Stations Near You</h2>
+          <h2 id="stations-title" style={{ fontSize: '1.5rem', marginBottom: '1rem', color: '#374151' }}>{UI_MESSAGES.STATIONS_SECTION_TITLE}</h2>
           
           {loading ? (
-            <p>Connecting to database...</p>
+            <p>{UI_MESSAGES.CONNECTING_TO_DB}</p>
           ) : stations.length === 0 ? (
             <div style={{ padding: '2rem', backgroundColor: '#f3f4f6', borderRadius: '12px', textAlign: 'center' }}>
-              <p>No active stations found in your database.</p>
+              <p>{UI_MESSAGES.NO_STATIONS_FOUND}</p>
               <button 
                 onClick={handleSeed}
                 style={{ color: '#4f46e5', background: 'none', border: 'none', textDecoration: 'underline', cursor: 'pointer' }}
               >
-                Click here to seed mock data
+                {UI_MESSAGES.CLICK_TO_SEED}
               </button>
             </div>
           ) : (
@@ -165,14 +161,14 @@ export const Dashboard: React.FC = () => {
             border: '1px solid #e5e7eb'
           }}
         >
-          <h2 id="assistant-title" style={{ fontSize: '1.5rem', marginBottom: '1rem', color: '#374151' }}>Smart Assistant</h2>
+          <h2 id="assistant-title" style={{ fontSize: '1.5rem', marginBottom: '1rem', color: '#374151' }}>{UI_MESSAGES.ADVICE_SECTION_TITLE}</h2>
           {!selectedStation ? (
             <p style={{ color: '#6b7280' }}>Select a polling station to receive real-time advice and de-escalation tips in {language}.</p>
           ) : (
             <div aria-live="polite">
               <h3 style={{ color: '#111827' }}>Analyzing {selectedStation.name}...</h3>
               {adviceLoading ? (
-                <p>Generating smart advice in {language}...</p>
+                <p>{UI_MESSAGES.GETTING_ADVICE}</p>
               ) : (
                 <div style={{ 
                   backgroundColor: '#ffffff', 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import type { PollingStation, BoothStatus } from '../types';
 import { IncidentForm } from './IncidentForm';
 
@@ -15,7 +15,7 @@ const statusColors: Record<BoothStatus, string> = {
   closed: '#6b7280'    // Gray
 };
 
-export const BoothCard: React.FC<BoothCardProps> = ({ station, onSelect }) => {
+export const BoothCard: React.FC<BoothCardProps> = memo(({ station, onSelect }) => {
   const [showIncidentForm, setShowIncidentForm] = useState(false);
 
   return (
@@ -105,4 +105,6 @@ export const BoothCard: React.FC<BoothCardProps> = ({ station, onSelect }) => {
       )}
     </div>
   );
-};
+});
+
+BoothCard.displayName = 'BoothCard';

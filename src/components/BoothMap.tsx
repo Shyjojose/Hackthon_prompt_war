@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, memo } from 'react';
 import { Loader } from '@googlemaps/js-api-loader';
 import type { PollingStation, Location } from '../types';
 
@@ -7,7 +7,7 @@ interface BoothMapProps {
   userLocation: Location | null;
 }
 
-export const BoothMap: React.FC<BoothMapProps> = ({ stations, userLocation }) => {
+export const BoothMap: React.FC<BoothMapProps> = memo(({ stations, userLocation }) => {
   const mapRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -89,4 +89,6 @@ export const BoothMap: React.FC<BoothMapProps> = ({ stations, userLocation }) =>
       aria-label="Map showing polling station locations"
     />
   );
-};
+});
+
+BoothMap.displayName = 'BoothMap';
