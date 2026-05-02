@@ -10,7 +10,7 @@ const station: PollingStation = {
   location: { lat: 32.7767, lng: -96.797 },
   status: 'busy',
   queueWaitTime: 45,
-  lastUpdated: null,
+  lastUpdated: Date.now(),
   officialNotes: 'Open and ready',
   precinctRules: ['Assigned Precinct Only'],
 };

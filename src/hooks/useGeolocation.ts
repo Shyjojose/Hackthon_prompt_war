@@ -1,13 +1,30 @@
 import { useState, useEffect } from 'react';
 import type { Location } from '../types';
+import { logger } from '../services/logger';
 
 export const useGeolocation = () => {
   const [location, setLocation] = useState<Location | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [consentGiven, setConsentGiven] = useState(false);
+  const [showConsentPrompt, setShowConsentPrompt] = useState(true);
 
+  // Check if user has already consented to geolocation
   useEffect(() => {
+    const savedConsent = localStorage.getItem('geolocation_consent');
+    if (savedConsent === 'true') {
+      setConsentGiven(true);
+      setShowConsentPrompt(false);
+    }
+  }, []);
+
+  // Request geolocation permission after user consent
+  useEffect(() => {
+    if (!consentGiven) return;
+
     if (!navigator.geolocation) {
-      setError('Geolocation is not supported by your browser');
+      const msg = 'Geolocation is not supported by your browser';
+      setError(msg);
+      logger.warn(msg);
       return;
     }
 
@@ -16,19 +33,42 @@ export const useGeolocation = () => {
         lat: position.coords.latitude,
         lng: position.coords.longitude,
       });
+      logger.debug('Geolocation updated', { lat: position.coords.latitude, lng: position.coords.longitude });
     };
 
     const handleError = (error: GeolocationPositionError) => {
       setError(error.message);
+      logger.warn(`Geolocation error: ${error.message}`);
     };
 
-    navigator.geolocation.getCurrentPosition(handleSuccess, handleError);
+    // Request initial position (with timeout)
+    navigator.geolocation.getCurrentPosition(handleSuccess, handleError, {
+      timeout: 10000,
+      enableHighAccuracy: false,
+    });
     
-    // Watch position for real-time movement
-    const watchId = navigator.geolocation.watchPosition(handleSuccess, handleError);
+    // Watch position for real-time movement (at lower precision to save battery)
+    const watchId = navigator.geolocation.watchPosition(handleSuccess, handleError, {
+      timeout: 30000,
+      enableHighAccuracy: false,
+    });
 
     return () => navigator.geolocation.clearWatch(watchId);
-  }, []);
+  }, [consentGiven]);
 
-  return { location, error };
+  const handleConsentGive = () => {
+    localStorage.setItem('geolocation_consent', 'true');
+    setConsentGiven(true);
+    setShowConsentPrompt(false);
+    logger.info('User granted geolocation consent');
+  };
+
+  const handleConsentDeny = () => {
+    localStorage.setItem('geolocation_consent', 'false');
+    setShowConsentPrompt(false);
+    setError('Geolocation access declined. Precinct verification will not be available.');
+    logger.info('User denied geolocation consent');
+  };
+
+  return { location, error, showConsentPrompt, onConsentGive: handleConsentGive, onConsentDeny: handleConsentDeny };
 };

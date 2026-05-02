@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { reportIncident } from '../services/incidents';
+import { logger } from '../services/logger';
 
 interface IncidentFormProps {
   boothId: string;
@@ -13,14 +14,32 @@ export const IncidentForm: React.FC<IncidentFormProps> = ({ boothId, boothName, 
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
 
+  const MAX_DESCRIPTION_LENGTH = 500;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const trimmedDescription = description.trim();
+    
+    if (!trimmedDescription) {
+      logger.warn("Incident form submitted with empty description");
+      alert("Please provide a description for the incident.");
+      return;
+    }
+    
+    if (trimmedDescription.length > MAX_DESCRIPTION_LENGTH) {
+      logger.warn(`Incident description too long: ${trimmedDescription.length} chars (max ${MAX_DESCRIPTION_LENGTH})`);
+      alert(`Description must be ${MAX_DESCRIPTION_LENGTH} characters or less. Current: ${trimmedDescription.length}.`);
+      return;
+    }
+    
     setSubmitting(true);
     try {
-      await reportIncident(boothId, type, description);
+      await reportIncident(boothId, type, trimmedDescription);
+      logger.info(`Incident reported: type=${type}, booth=${boothId}`);
       setSuccess(true);
       setTimeout(onClose, 2000);
     } catch (error) {
+      logger.error("Failed to report incident", error instanceof Error ? error : new Error(String(error)));
       alert("Failed to report incident. Please try again.");
     } finally {
       setSubmitting(false);
@@ -71,15 +90,20 @@ export const IncidentForm: React.FC<IncidentFormProps> = ({ boothId, boothName, 
             </div>
 
             <div style={{ marginBottom: '1.5rem' }}>
-              <label htmlFor="desc" style={{ display: 'block', marginBottom: '0.5rem' }}>Description</label>
+              <label htmlFor="desc" style={{ display: 'block', marginBottom: '0.5rem' }}>Description (Max 500 characters)</label>
               <textarea 
                 id="desc"
                 required
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                onChange={(e) => setDescription(e.target.value.slice(0, MAX_DESCRIPTION_LENGTH))}
+                maxLength={MAX_DESCRIPTION_LENGTH}
                 style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #d1d5db', minHeight: '100px' }}
                 placeholder="Please provide details about the situation..."
+                aria-describedby="desc-counter"
               />
+              <div id="desc-counter" style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem' }}>
+                {description.length}/{MAX_DESCRIPTION_LENGTH}
+              </div>
             </div>
 
             <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>

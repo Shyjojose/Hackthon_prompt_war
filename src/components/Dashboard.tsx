@@ -6,12 +6,13 @@ import { BoothMap } from './BoothMap';
 import type { PollingStation } from '../types';
 import { getSmartAdvice } from '../services/gemini';
 import { seedDatabase } from '../utils/seedData';
+import { logger } from '../services/logger';
 
 const LANGUAGES = ['English', 'Spanish', 'Hindi', 'Tamil', 'French'];
 
 export const Dashboard: React.FC = () => {
   const { stations, loading, error: stationsError } = usePollingStations();
-  const { location: userLocation, error: geoError } = useGeolocation();
+  const { location: userLocation, error: geoError, showConsentPrompt, onConsentGive, onConsentDeny } = useGeolocation();
   const [selectedStation, setSelectedStation] = useState<PollingStation | null>(null);
   const [advice, setAdvice] = useState<string>('');
   const [adviceLoading, setAdviceLoading] = useState(false);
@@ -26,9 +27,10 @@ export const Dashboard: React.FC = () => {
       setSeeding(true);
       try {
         await seedDatabase();
-        alert("Database seeded! If stations don't appear, check your Firebase configuration.");
+        logger.info("Database seeded successfully");
       } catch (err) {
-        alert("Failed to seed: " + (err instanceof Error ? err.message : String(err)));
+        const errorMsg = err instanceof Error ? err.message : String(err);
+        logger.error("Failed to seed database", err instanceof Error ? err : new Error(errorMsg));
       } finally {
         setSeeding(false);
       }
@@ -103,6 +105,22 @@ export const Dashboard: React.FC = () => {
       {geoError && (
         <div style={{ backgroundColor: '#fee2e2', color: '#991b1b', padding: '1rem', borderRadius: '8px', marginBottom: '2rem' }} role="alert">
           <strong>Location Error:</strong> {geoError}. We recommend enabling location for precinct verification.
+        </div>
+      )}
+
+      {showConsentPrompt && (
+        <div style={{ backgroundColor: '#dbeafe', color: '#0c4a6e', padding: '1rem', borderRadius: '8px', marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }} role="alert">
+          <div>
+            <strong>Location Services:</strong> Enable location to verify your precinct assignment and get better polling station recommendations.
+          </div>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button onClick={onConsentGive} style={{ padding: '0.5rem 1rem', backgroundColor: '#0369a1', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.875rem' }}>
+              Enable
+            </button>
+            <button onClick={onConsentDeny} style={{ padding: '0.5rem 1rem', backgroundColor: 'transparent', color: '#0c4a6e', border: '1px solid #0c4a6e', borderRadius: '4px', cursor: 'pointer', fontSize: '0.875rem' }}>
+              Skip
+            </button>
+          </div>
         </div>
       )}
 

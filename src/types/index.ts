@@ -12,7 +12,7 @@ export interface PollingStation {
   location: Location;
   status: BoothStatus;
   queueWaitTime: number; // in minutes
-  lastUpdated: any; // Firebase Timestamp
+  lastUpdated: number | { seconds: number; nanoseconds: number }; // Firebase Timestamp
   officialNotes?: string;
   precinctRules?: string[];
 }
@@ -23,8 +23,8 @@ export interface Incident {
   type: 'malfunction' | 'misinformation' | 'crowd' | 'other';
   description: string;
   verified: boolean;
-  timestamp: any; // Firebase Timestamp
-  reportedBy: string; // User ID
+  timestamp: number | { seconds: number; nanoseconds: number }; // Firebase Timestamp
+  reportedBy: string; // User ID (e.g., session ID or anonymous user ID)
 }
 
 export interface UserContext {

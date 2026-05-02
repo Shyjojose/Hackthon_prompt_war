@@ -16,11 +16,18 @@ export const BoothMap: React.FC<BoothMapProps> = ({ stations, userLocation }) =>
     if (!apiKey || apiKey.includes('placeholder')) {
       console.warn("Google Maps API Key missing or placeholder. Map will not load.");
       if (mapRef.current) {
-        mapRef.current.innerHTML = `
-          <div style="display:flex;align-items:center;justify-content:center;height:100%;background:#eee;color:#666;border-radius:12px;">
-            Please provide a valid VITE_GOOGLE_MAPS_API_KEY in .env to view the map.
-          </div>
-        `;
+        const placeholder = document.createElement('div');
+        placeholder.style.display = 'flex';
+        placeholder.style.alignItems = 'center';
+        placeholder.style.justifyContent = 'center';
+        placeholder.style.height = '100%';
+        placeholder.style.background = '#eee';
+        placeholder.style.color = '#666';
+        placeholder.style.borderRadius = '12px';
+        placeholder.style.fontSize = '0.875rem';
+        placeholder.textContent = 'Please provide a valid VITE_GOOGLE_MAPS_API_KEY in .env to view the map.';
+        mapRef.current.innerHTML = '';
+        mapRef.current.appendChild(placeholder);
       }
       return;
     }
